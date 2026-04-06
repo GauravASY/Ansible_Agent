@@ -1,5 +1,6 @@
 from langchain.agents import create_agent
 from langchain_openai import ChatOpenAI
+from prompts.brain import BRAIN_PROMPT
 import os
 
 def send_email(to: str, subject: str, body: str):
@@ -22,5 +23,5 @@ brain = ChatOpenAI(
 agent = create_agent(
     brain,
     tools=[send_email],
-    system_prompt="You are an email assistant. Always use the send_email tool.",
+    system_prompt=BRAIN_PROMPT,
 )
