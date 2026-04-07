@@ -3,6 +3,7 @@ from langchain_openai import ChatOpenAI
 from langchain.tools import tool
 from src.prompts.brain import BRAIN_PROMPT
 from src.prompts.playbook import PLAYBOOK_PROMPT
+from src.tools.execute_playbook import execute_playbook
 import os
 
 
@@ -30,6 +31,6 @@ def call_playbook_agent(query: str):
 
 agent = create_agent(
     brain,
-    tools=[call_playbook_agent],
+    tools=[call_playbook_agent, execute_playbook],
     system_prompt=BRAIN_PROMPT,
 )
