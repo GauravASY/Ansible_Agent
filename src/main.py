@@ -1,4 +1,5 @@
 from langchain.agents import create_agent
+from langchain.agents.middleware import HumanInTheLoopMiddleware
 from langchain_openai import ChatOpenAI
 from langchain.tools import tool
 from src.prompts.brain import BRAIN_PROMPT
@@ -33,4 +34,10 @@ agent = create_agent(
     brain,
     tools=[call_playbook_agent, execute_playbook],
     system_prompt=BRAIN_PROMPT,
+    middleware=[HumanInTheLoopMiddleware(
+        interrupt_on={
+            "execute_playbook" : {"allowed_decisions": ["approve", "reject"]}
+        },
+        description_prefix="Tool execution pending approval"
+    )],
 )
