@@ -42,45 +42,20 @@ def execute_playbook(
     ] = None,
 ) -> str:
     """
-    Human-in-the-loop Ansible playbook executor.
+    Ansible playbook executor.
 
     Writes the playbook to /tmp/<uuid>.yml, asks for user approval via LangGraph
     interrupt(), then runs ansible-playbook and returns the output.
     """
 
-    # ── 1. Ask for user approval ──────────────────────────────────────────────
-    mode_label = "DRY-RUN (--check --diff)" if dry_run else "LIVE EXECUTION"
 
-    preview_lines = playbook_yaml.strip().splitlines()
-    preview = "\n".join(preview_lines[:30])
-    if len(preview_lines) > 30:
-        preview += f"\n... ({len(preview_lines) - 30} more lines)"
-
-    approval: str = interrupt(
-        {
-            "message": (
-                f"⚠️  Playbook Execution Approval Required\n\n"
-                f"Mode      : {mode_label}\n"
-                f"Inventory : {inventory}\n"
-                f"Working dir: {working_dir or os.getcwd()}\n"
-                + (f"Tags      : {', '.join(tags)}\n" if tags else "")
-                + (f"Extra vars: {extra_vars}\n" if extra_vars else "")
-                + f"\n--- Playbook Preview ---\n{preview}\n"
-                f"\nType 'yes' to proceed, anything else to cancel."
-            )
-        }
-    )
-
-    if approval.strip().lower() != "yes":
-        return "❌ Execution cancelled — user did not approve."
-
-    # ── 2. Write playbook to a temp file ──────────────────────────────────────
+    #  Write playbook to a temp file
     tmp_path = os.path.join(tempfile.gettempdir(), f"playbook_{uuid.uuid4().hex}.yml")
     try:
         with open(tmp_path, "w") as f:
             f.write(playbook_yaml)
 
-        # ── 3. Build ansible-playbook command ─────────────────────────────────
+        # ── 3. Build ansible-playbook command
         cmd = ["ansible-playbook", tmp_path, "-i", inventory]
 
         if dry_run:
@@ -94,7 +69,6 @@ def execute_playbook(
             ev_str = " ".join(f"{k}={v}" for k, v in extra_vars.items())
             cmd += ["--extra-vars", ev_str]
 
-        # ── 4. Run ────────────────────────────────────────────────────────────
         result = subprocess.run(
             cmd,
             capture_output=True,
@@ -123,6 +97,6 @@ def execute_playbook(
         return output
 
     finally:
-        # ── 5. Clean up temp file ─────────────────────────────────────────────
+     # Remove the temporary file
         if os.path.exists(tmp_path):
             os.remove(tmp_path)
