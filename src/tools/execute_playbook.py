@@ -84,15 +84,15 @@ def execute_playbook(
         stdout_lines = stdout.splitlines()
         if len(stdout_lines) > MAX_LINES:
             stdout = (
-                f"[... {len(stdout_lines) - MAX_LINES} lines omitted ...]\n"
+                f"[{len(stdout_lines) - MAX_LINES} lines omitted]\n"
                 + "\n".join(stdout_lines[-MAX_LINES:])
             )
 
         status = "✅ SUCCESS" if result.returncode == 0 else f"❌ FAILED (exit {result.returncode})"
 
-        output = f"{status}\n\n--- stdout ---\n{stdout}"
+        output = f"{status}\n\nstdout\n{stdout}"
         if stderr:
-            output += f"\n\n--- stderr ---\n{stderr}"
+            output += f"\n\nstderr\n{stderr}"
 
         return output
 
