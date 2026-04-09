@@ -2,6 +2,7 @@ from langchain.agents import create_agent
 from langchain.agents.middleware import HumanInTheLoopMiddleware
 from langchain_openai import ChatOpenAI
 from langchain.tools import tool
+from langgraph.types import Command
 from src.prompts.brain import BRAIN_PROMPT
 from src.prompts.playbook import PLAYBOOK_PROMPT
 from src.tools.execute_playbook import execute_playbook
@@ -41,3 +42,27 @@ agent = create_agent(
         description_prefix="Tool execution pending approval"
     )],
 )
+
+for chunk in agent.stream(
+    input,
+    stream_mode=["updates", "messages"],
+    version="v2"
+):
+    if chunk["type"] == "messages":
+        token, metadata = chunk["data"]
+        if token.content:
+            print(token.content, end="", flush=True)
+    elif chunk["type"] == "updates":
+        if "__interrupt__" in chunk["data"]:
+            print(f"\n\nInterrupt: {chunk['data']['__interrupt__']}")
+
+for chunk in agent.stream(
+    input,
+    Command(resume={"decisions": [{"type": "approve"}]}),
+    stream_mode=["updates", "messages"],
+    version="v2",
+):
+    if chunk["type"] == "messages":
+        token, metadata = chunk["data"]
+        if token.content:
+            print(token.content, end="", flush=True)
