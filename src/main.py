@@ -13,12 +13,14 @@ brain = ChatOpenAI(
     model="nvidia/nemotron-3-super-120b-a12b:free",
     api_key=os.environ["OPENROUTER_API_KEY"],
     base_url="https://openrouter.ai/api/v1",
+    streaming=True,
 )
 
 playbook_model = ChatOpenAI(
     model="minimax/minimax-m2.5:free",
     api_key=os.environ["OPENROUTER_API_KEY"],
     base_url="https://openrouter.ai/api/v1",
+    streaming=True,
 )
 
 playbook_agent = create_agent(
@@ -28,8 +30,17 @@ playbook_agent = create_agent(
 
 @tool("playbook", description="Ansible playbook authoring agent. Call this tool when the user asks to write, generate, create, or modify an Ansible playbook, role, task block, handler, Jinja2 template, or variable file. Returns deployable YAML.")
 def call_playbook_agent(query: str):
-    result = playbook_agent.invoke({"messages": [{"role": "user", "content": query}]})
-    return result["messages"][-1].content
+    full_response = ""
+    for chunks in playbook_agent.stream(
+        {"messages": [{"role": "user", "content": query}]},
+        stream_mode=["messages"],
+        version="v2"
+    ):
+        if chunks["type"] == "messages":
+            token, metadata = chunks["data"]
+            if token.content:
+                full_response += token.content
+    return full_response
 
 agent = create_agent(
     brain,
@@ -43,26 +54,3 @@ agent = create_agent(
     )],
 )
 
-for chunk in agent.stream(
-    input,
-    stream_mode=["updates", "messages"],
-    version="v2"
-):
-    if chunk["type"] == "messages":
-        token, metadata = chunk["data"]
-        if token.content:
-            print(token.content, end="", flush=True)
-    elif chunk["type"] == "updates":
-        if "__interrupt__" in chunk["data"]:
-            print(f"\n\nInterrupt: {chunk['data']['__interrupt__']}")
-
-for chunk in agent.stream(
-    input,
-    Command(resume={"decisions": [{"type": "approve"}]}),
-    stream_mode=["updates", "messages"],
-    version="v2",
-):
-    if chunk["type"] == "messages":
-        token, metadata = chunk["data"]
-        if token.content:
-            print(token.content, end="", flush=True)
