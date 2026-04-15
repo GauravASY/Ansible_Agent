@@ -5,7 +5,6 @@ import uuid
 from typing import Annotated
 
 from langchain.tools import tool
-from langgraph.types import interrupt
 
 
 @tool(
