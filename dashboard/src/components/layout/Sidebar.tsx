@@ -1,21 +1,21 @@
 import { useBCPStore } from "@/store/bcpStore";
 import { MigrationPhase } from "@/data/interfaces";
 import { Badge } from "@/components/ui/badge";
-import { LucideIcon, LayoutDashboard, Map, ServerCog, Diagram2, Activity, Clock } from "lucide-react";
+import { type LucideIcon, LayoutDashboard, Map, ServerCog, Network, Activity, Clock } from "lucide-react";
 
-const navItems = [
-  { name: "Overview", icon: LayoutDashboard, href: "#overview" },
-  { name: "Migration Map", icon: Map, href: "#migration-map" },
-  { name: "Resources", icon: ServerCog, href: "#resources" },
-  { name: "System Topology", icon: Diagram2, href: "#topology" },
-  { name: "Logs", icon: Activity, href: "#logs" }
+const navItems: { name: string; icon: LucideIcon; id: string }[] = [
+  { name: "Overview", icon: LayoutDashboard, id: "overview" },
+  { name: "Migration Map", icon: Map, id: "migration-map" },
+  { name: "Resources", icon: ServerCog, id: "resources" },
+  { name: "System Topology", icon: Network, id: "topology" },
+  { name: "Logs", icon: Activity, id: "logs" },
 ];
 
 export function Sidebar() {
-  const { migrationPhase } = useBCPStore();
+  const { migrationPhase, activeSection, setActiveSection } = useBCPStore();
 
   return (
-    <aside className="fixed left-0 top-0 bottom-0 w-64 bg-border/10 dark:bg-background/50 backdrop-blur border-r border-border/20 px-4 py-6 flex flex-col">
+    <aside className="fixed left-0 top-0 bottom-0 w-64 bg-border/10 dark:bg-background/50 backdrop-blur border-r border-border/20 px-4 py-6 flex flex-col z-10">
       <div className="flex items-center space-x-3 mb-8">
         <div className="h-8 w-8 bg-accent/20 rounded-lg flex items-center justify-center">
           <span className="text-accent font-mono text-lg">BCP</span>
@@ -28,16 +28,16 @@ export function Sidebar() {
 
       <nav className="flex-0 space-y-2">
         {navItems.map((item) => (
-          <a
-            key={item.name}
-            href={item.href}
-            className={`flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium
-                       hover:bg-accent/10 hover:text-accent transition-colors
-                       ${item.href === "#overview" && "bg-accent/20 text-accent"}`}
+          <button
+            key={item.id}
+            onClick={() => setActiveSection(item.id)}
+            className={`w-full flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium
+                       hover:bg-accent/10 hover:text-accent transition-colors text-left
+                       ${activeSection === item.id ? "bg-accent/20 text-accent" : "text-muted-foreground"}`}
           >
             <item.icon className="h-4 w-4" />
             <span>{item.name}</span>
-          </a>
+          </button>
         ))}
       </nav>
 

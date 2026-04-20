@@ -1,10 +1,10 @@
 import { create } from "zustand";
-import {
+import { MigrationPhase } from "../data/interfaces";
+import type {
   MigrationCorridor,
   Resource,
   SystemNode,
   SystemEdge,
-  MigrationPhase,
   LogEntry
 } from "../data/interfaces";
 import {
@@ -25,8 +25,10 @@ interface BCPState {
   migrationPhase: MigrationPhase;
   logEntries: LogEntry[];
   selectedResourceId: string | null;
+  activeSection: string;
 
   // Actions
+  setActiveSection: (section: string) => void;
   addResource: (resource: Omit<Resource, "id">) => void;
   updateResource: (id: string, updates: Partial<Resource>) => void;
   deleteResource: (id: string) => void;
@@ -57,6 +59,9 @@ export const useBCPStore = create<BCPState>((set, get) => ({
   migrationPhase: mockMigrationPhase,
   logEntries: mockLogs,
   selectedResourceId: null,
+  activeSection: "overview",
+
+  setActiveSection: (section) => set({ activeSection: section }),
 
   // Actions
   addResource: (resource) => {

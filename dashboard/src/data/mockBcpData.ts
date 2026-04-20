@@ -1,4 +1,5 @@
-import { MigrationCorridor, Resource, SystemNode, SystemEdge, MigrationPhase, LogEntry } from "./interfaces";
+import { MigrationPhase } from "./interfaces";
+import type { MigrationCorridor, Resource, SystemNode, SystemEdge, LogEntry } from "./interfaces";
 
 // Mock migration corridors
 export const mockCorridors: MigrationCorridor[] = [
