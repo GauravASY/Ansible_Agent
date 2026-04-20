@@ -1,28 +1,33 @@
 import { useEffect, useState } from "react";
+import { useBCPStore } from "@/store/bcpStore";
 
 export function RtoCard() {
-  const [value, setValue] = useState(0);
+  const { getOverallProgress } = useBCPStore();
+  const targetFraction = getOverallProgress() / 100;
+
   const targetValue = 135; // 2 hrs 15 min in minutes
-  const [progress, setProgress] = useState(0); // percentage of RTO window consumed
+  const [value, setValue] = useState(0);
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    // Simulate consuming 60% of RTO window (for example)
-    const duration = 2000; // 2 seconds
+    const duration = 2000;
     const startTime = performance.now();
 
     function updateCount(currentTime: number) {
       const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      setProgress(progress * 0.6); // 60% consumed
-      setValue(Math.floor(progress * targetValue)); // Update the value display
+      const t = Math.min(elapsed / duration, 1);
+      setProgress(t * targetFraction);
+      setValue(Math.floor(t * targetFraction * targetValue));
 
-      if (progress < 1) {
+      if (t < 1) {
         requestAnimationFrame(updateCount);
       }
     }
 
     requestAnimationFrame(updateCount);
-  }, []);
+  }, [targetFraction]);
+
+  const remainingMin = Math.max(0, targetValue - Math.round(progress * targetValue));
 
   return (
     <div className="bg-card rounded-lg p-4 text-sm">
@@ -30,23 +35,22 @@ export function RtoCard() {
       <div className="mt-2 flex items-center">
         <div className="relative w-12 h-12">
           <svg className="w-12 h-12" viewBox="0 0 24 24">
-            {/* Background circle */}
             <circle cx="12" cy="12" r="10" stroke="border/20" strokeWidth="2" fill="none" />
-            {/* Progress arc */}
             <circle
               cx="12"
               cy="12"
               r="10"
-              stroke="accent"
+              stroke="currentColor"
+              className="text-accent"
               strokeWidth="2"
               fill="none"
-              strokeDasharray="62.83" {/* 2 * PI * r = 2 * 3.1415 * 10 ≈ 62.83 */}
+              strokeDasharray="62.83"
               strokeDashoffset={`${62.83 * (1 - progress)}`}
-              transition="stroke-dashoffset 0.3s ease"
+              style={{ transition: "stroke-dashoffset 0.3s ease" }}
             />
           </svg>
           <div className="absolute inset-0 flex items-center justify-center text-xs font-mono">
-            {Math.max(0, targetValue - Math.round(progress * targetValue))} min
+            {remainingMin} min
           </div>
         </div>
         <div className="ml-3">
