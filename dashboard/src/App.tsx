@@ -10,6 +10,15 @@ import { SystemTopology } from "@/components/topology/SystemTopology";
 import { MigrationLogs } from "@/components/logs/MigrationLogs";
 import { useBCPStore } from "@/store/bcpStore";
 
+function SectionHeader({ title, description }: { title: string; description: string }) {
+  return (
+    <div className="mb-6">
+      <h2 className="text-xl font-bold text-foreground">{title}</h2>
+      <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
+    </div>
+  );
+}
+
 export function App() {
   const { activeSection } = useBCPStore();
 
@@ -21,7 +30,10 @@ export function App() {
         <main className="flex-1 p-6 overflow-auto ml-64">
           {activeSection === "overview" && (
             <section>
-              <h2 className="text-2xl font-bold text-foreground mb-4">Overview</h2>
+              <SectionHeader
+                title="Overview"
+                description="Real-time BCP migration status and key performance metrics"
+              />
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <RpoCard />
                 <RtoCard />
@@ -33,28 +45,40 @@ export function App() {
 
           {activeSection === "migration-map" && (
             <section>
-              <h2 className="text-2xl font-bold text-foreground mb-4">Migration Map</h2>
+              <SectionHeader
+                title="Migration Map"
+                description="Corridor progress, latency, and bandwidth across all DC-to-DR routes"
+              />
               <MigrationMap />
             </section>
           )}
 
           {activeSection === "resources" && (
             <section>
-              <h2 className="text-2xl font-bold text-foreground mb-4">Resources</h2>
+              <SectionHeader
+                title="Resource Registry"
+                description="Manage and track all resources in the migration pipeline"
+              />
               <ResourceRegistry />
             </section>
           )}
 
           {activeSection === "topology" && (
             <section>
-              <h2 className="text-2xl font-bold text-foreground mb-4">System Topology</h2>
+              <SectionHeader
+                title="System Topology"
+                description="Live network graph of source DC and target DR infrastructure"
+              />
               <SystemTopology />
             </section>
           )}
 
           {activeSection === "logs" && (
             <section>
-              <h2 className="text-2xl font-bold text-foreground mb-4">Migration Logs</h2>
+              <SectionHeader
+                title="Migration Logs"
+                description="Chronological event stream with severity-level filtering"
+              />
               <MigrationLogs />
             </section>
           )}

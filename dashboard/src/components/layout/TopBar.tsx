@@ -44,32 +44,56 @@ export function TopBar() {
     return () => clearInterval(id);
   }, []);
 
+  const currentPhaseIndex = phases.indexOf(migrationPhase);
+
   return (
-    <header className="sticky top-0 left-64 right-0 z-20 bg-background/80 dark:bg-background/90 backdrop-blur border-b border-border/20 px-6 py-4 flex items-center justify-between">
-      <div className="flex items-center space-x-4">
-        <span className="text-xs text-muted-foreground">You are in:</span>
-        <span className="text-sm font-medium text-foreground">{sectionLabels[activeSection] ?? activeSection}</span>
+    <header className="sticky top-0 left-64 right-0 z-20 bg-background/80 dark:bg-background/90 backdrop-blur border-b border-border/20 px-6 py-3 flex items-center justify-between">
+      <div className="flex items-center space-x-2">
+        <span className="text-xs text-muted-foreground">Section:</span>
+        <span className="text-sm font-semibold text-foreground">{sectionLabels[activeSection] ?? activeSection}</span>
       </div>
 
-      <div className="flex-1 flex justify-center">
-        <div className="w-full max-w-2xl">
-          <div className="flex items-center space-x-2">
-            {phases.map((phase, index) => (
-              <div key={phase} className="flex items-center space-x-1">
-                <div className={`w-3 h-3 rounded-full transition-colors
-                  ${migrationPhase === phase ? "bg-accent" : "bg-muted/50"}`} />
-                {index < phases.length - 1 && <div className="w-px bg-muted/50" />}
-                <span className={`text-xs font-medium transition-colors
-                  ${migrationPhase === phase ? "text-accent" : "text-muted-foreground"}`}>
+      <div className="flex items-center">
+        {phases.map((phase, index) => {
+          const isActive = migrationPhase === phase;
+          const isDone = index < currentPhaseIndex;
+          return (
+            <div key={phase} className="flex items-center">
+              <div className="flex flex-col items-center gap-1.5">
+                <div
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                    isActive
+                      ? "bg-accent ring-2 ring-accent/30 scale-125"
+                      : isDone
+                      ? "bg-accent/50"
+                      : "bg-muted/40"
+                  }`}
+                />
+                <span
+                  className={`text-[10px] font-medium whitespace-nowrap ${
+                    isActive
+                      ? "text-accent"
+                      : isDone
+                      ? "text-muted-foreground/70"
+                      : "text-muted-foreground/40"
+                  }`}
+                >
                   {phase}
                 </span>
               </div>
-            ))}
-          </div>
-        </div>
+              {index < phases.length - 1 && (
+                <div
+                  className={`w-8 h-px self-start mt-1 mx-1 ${
+                    isDone ? "bg-accent/40" : "bg-border/40"
+                  }`}
+                />
+              )}
+            </div>
+          );
+        })}
       </div>
 
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-3">
         <div className="relative">
           <button className="p-2 rounded-md hover:bg-muted/50 transition-colors" aria-label="Notifications">
             <Bell className="h-4 w-4 text-muted-foreground hover:text-accent" />
@@ -87,7 +111,7 @@ export function TopBar() {
         >
           INITIATE FAILOVER
         </Button>
-        <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+        <div className="flex items-center space-x-1.5 text-xs text-muted-foreground">
           <Clock className="h-3 w-3" />
           <span>Last sync: {syncLabel}</span>
         </div>
