@@ -1,4 +1,4 @@
-import { ReactFlowNode } from "@xyflow/react";
+// unused legacy file — topology is rendered via SystemTopology.tsx
 import { Database } from "lucide-react";
 
 interface DatabaseNodeData {
