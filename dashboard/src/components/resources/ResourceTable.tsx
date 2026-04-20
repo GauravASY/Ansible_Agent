@@ -1,4 +1,5 @@
 import { useBCPStore } from "@/store/bcpStore";
+import type { Resource } from "@/data/interfaces";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ResourceActions } from "./ResourceActions";

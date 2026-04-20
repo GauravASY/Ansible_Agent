@@ -1,21 +1,18 @@
-import { useBCPStore } from "@/store/bcpStore";
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import type { Resource } from "@/data/interfaces";
 
-export function ResourceDetail() {
-  const { selectedResource, setSelectedResourceId } = useBCPStore();
-  const resource = selectedResource;
+interface ResourceDetailProps {
+  resource: Resource | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
 
-  if (!resource) {
-    return null;
-  }
+export function ResourceDetail({ resource, open, onOpenChange }: ResourceDetailProps) {
+  if (!resource) return null;
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        {/* This is triggered from ResourceActions when "View Details" is clicked */}
-        <div />
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-full max-w-lg">
         <DialogHeader>
           <DialogTitle>{resource.name}</DialogTitle>
@@ -51,10 +48,12 @@ export function ResourceDetail() {
                 <span className="text-muted-foreground">Dependencies</span>
                 <p>{resource.dependencies.length > 0 ? resource.dependencies.join(", ") : "None"}</p>
               </div>
-              <div>
-                <span className="text-muted-foreground">Notes</span>
-                <p>{resource.notes || "No notes provided"}</p>
-              </div>
+              {resource.notes && (
+                <div className="col-span-2">
+                  <span className="text-muted-foreground">Notes</span>
+                  <p>{resource.notes}</p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -71,7 +70,7 @@ export function ResourceDetail() {
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setSelectedResourceId(null)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
             Close
           </Button>
         </DialogFooter>
