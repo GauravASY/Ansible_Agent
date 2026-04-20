@@ -9,12 +9,12 @@ export function ResourcesMigratedCard() {
 
   return (
     <div className="bg-card rounded-lg p-4 text-sm">
-      <h3 className="font-medium text-muted-foreground">Resources Migrated</p>
+      <h3 className="font-medium text-muted-foreground">Resources Migrated</h3>
       <p className="mt-1 text-2xl font-mono text-accent">{migratedCount} / {totalCount}</p>
       <p className="mt-1 text-xs text-muted-foreground">Servers, DBs, and services</p>
       <div className="mt-2 w-full">
         <div className="w-full bg-muted/50 rounded-full h-2.5">
-          <div className="bg-accent h-2.5 rounded-full transition-width duration-500" style={{ width: `${progress}%` }}></div>
+          <div className="bg-accent h-2.5 rounded-full transition-all duration-500" style={{ width: `${progress}%` }}></div>
         </div>
       </div>
       <span className="mt-1 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow/10 text-yellow">
