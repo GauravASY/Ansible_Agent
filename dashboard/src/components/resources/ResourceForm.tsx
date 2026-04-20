@@ -5,7 +5,7 @@ import { useBCPStore } from "@/store/bcpStore";
 import { resourceSchema } from "@/schemas/resourceSchema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
 type ResourceFormValues = z.infer<typeof resourceSchema>;
@@ -191,7 +191,12 @@ export function ResourceForm() {
             Dependencies (comma-separated resource names)
           </label>
           <Input
-            {...register("dependencies")}
+            {...register("dependencies", {
+              setValueAs: (v) =>
+                typeof v === "string"
+                  ? v.split(",").map((s) => s.trim()).filter(Boolean)
+                  : v,
+            })}
             placeholder="res-001, res-002"
             className={errors.dependencies ? "border-destructive" : ""}
           />
