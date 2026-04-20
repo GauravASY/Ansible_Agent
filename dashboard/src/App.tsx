@@ -9,6 +9,7 @@ import { ResourceRegistry } from "@/components/resources/ResourceRegistry";
 import { SystemTopology } from "@/components/topology/SystemTopology";
 import { MigrationLogs } from "@/components/logs/MigrationLogs";
 import { useBCPStore } from "@/store/bcpStore";
+import { DataFlowTopology } from "@/components/overview/DataFlowTopology";
 
 function SectionHeader({ title, description }: { title: string; description: string }) {
   return (
@@ -39,6 +40,9 @@ export function App() {
                 <RtoCard />
                 <ResourcesMigratedCard />
                 <EstimatedCompletionCard />
+              </div>
+              <div className="mt-6">
+                <DataFlowTopology />
               </div>
             </section>
           )}
