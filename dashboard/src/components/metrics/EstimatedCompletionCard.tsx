@@ -39,7 +39,7 @@ export function EstimatedCompletionCard() {
 
   return (
     <div className="bg-card rounded-lg p-4 text-sm">
-      <h3 className="font-medium text-muted-foreground">Estimated Completion</p>
+      <h3 className="font-medium text-muted-foreground">Estimated Completion</h3>
       <p className="mt-1 text-2xl font-mono text-accent">{timeLeft}</p>
       <p className="mt-1 text-xs text-muted-foreground">Based on current throughput</p>
       <span className="mt-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green/10 text-green">
