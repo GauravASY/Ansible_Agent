@@ -25,21 +25,19 @@ export function MigrationMap() {
             <YAxis />
             <Tooltip />
             <Legend />
-            <Cell>
-              {(props: any) => {
-                const { x, y, width, height, fillOpacity } = props;
-                return (
-                  <rect
-                    x={x}
-                    y={y}
-                    width={width}
-                    height={height}
-                    fill="url(#corridorGradient)"
-                    fillOpacity={fillOpacity}
-                  />
-                );
-              }}
-            </Cell>
+            <Bar dataKey="progress" name="Progress (%)">
+              {mockCorridors.map((corridor) => (
+                <Cell
+                  key={corridor.id}
+                  fill={
+                    corridor.status === "active" ? "#3b82f6" :
+                    corridor.status === "completed" ? "#22c55e" :
+                    corridor.status === "failed" ? "#ef4444" :
+                    "#6b7280"
+                  }
+                />
+              ))}
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>
