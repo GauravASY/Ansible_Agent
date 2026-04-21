@@ -15,7 +15,7 @@ export function Sidebar() {
   const { migrationPhase, activeSection, setActiveSection } = useBCPStore();
 
   return (
-    <aside className="fixed left-0 top-0 bottom-0 w-64 bg-background/95 dark:bg-background/98 border-r border-border/20 px-4 py-6 flex flex-col z-10">
+    <aside className="fixed left-0 top-14 bottom-0 w-64 bg-background/95 dark:bg-background/98 border-r border-border/20 px-4 py-6 flex flex-col z-10">
       <div className="flex items-center gap-3 mb-8 px-1">
         <div className="h-9 w-9 bg-accent/15 border border-accent/30 rounded-lg flex items-center justify-center shrink-0">
           <Zap className="h-5 w-5 text-accent" />
