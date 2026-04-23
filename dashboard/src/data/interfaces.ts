@@ -74,3 +74,6 @@ export interface LogEntry {
   level: "info" | "success" | "warning" | "error";
   message: string;
 }
+
+export type DCLayer = "Web" | "Application" | "Storage" | "Network";
+export type LayerMigrationStatus = "idle" | "migrating" | "migrated";
