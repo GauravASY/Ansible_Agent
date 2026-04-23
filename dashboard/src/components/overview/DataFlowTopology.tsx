@@ -1,37 +1,280 @@
+import { useState } from "react";
 import { useBCPStore } from "@/store/bcpStore";
-import { ArrowLeftRight, Server, Shield } from "lucide-react";
-import type { MigrationCorridor } from "@/data/interfaces";
+import type { DCLayer, LayerMigrationStatus, MigrationCorridor, Resource } from "@/data/interfaces";
+import { ArrowLeftRight, Globe, Cpu, Database, Network, Server, Shield } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
-type Status = MigrationCorridor["status"];
+// --- Layer definitions ---
 
-const STROKE: Record<Status, string> = {
-  active: "oklch(0.65 0.22 215)",
-  completed: "oklch(0.68 0.2 142)",
-  failed: "oklch(0.704 0.191 22.216)",
-  pending: "oklch(0.556 0 0)",
+const LAYERS: DCLayer[] = ["Web", "Application", "Storage", "Network"];
+
+const LAYER_TYPES: Record<DCLayer, Resource["type"][]> = {
+  Web: ["Load Balancer"],
+  Application: ["Application Server", "Microservice", "Message Broker"],
+  Storage: ["Database Server", "Storage Volume"],
+  Network: ["Network Appliance"],
 };
 
-const DOT: Record<Status, string> = {
-  active: "bg-green-500 animate-pulse",
-  completed: "bg-green-500 animate-pulse",
-  pending: "bg-yellow-500",
-  failed: "bg-red-500",
+const LAYER_ICON: Record<DCLayer, LucideIcon> = {
+  Web: Globe,
+  Application: Cpu,
+  Storage: Database,
+  Network: Network,
 };
 
-const BW_LABEL: Record<Status, (c: MigrationCorridor) => string> = {
-  active: (c) => `⇄ ${c.bandwidth_gbps} Gbps`,
-  completed: () => "✓ COMPLETE",
-  failed: () => "✗ FAILED",
-  pending: () => "— PENDING —",
+const LAYER_COLOR = {
+  Web:         { text: "text-sky-400",     border: "border-sky-500/40",     selBg: "bg-sky-500/10",     dot: "bg-sky-400",     stroke: "oklch(0.65 0.15 220)" },
+  Application: { text: "text-violet-400",  border: "border-violet-500/40",  selBg: "bg-violet-500/10",  dot: "bg-violet-400",  stroke: "oklch(0.6 0.18 280)"  },
+  Storage:     { text: "text-amber-400",   border: "border-amber-500/40",   selBg: "bg-amber-500/10",   dot: "bg-amber-400",   stroke: "oklch(0.75 0.15 80)"  },
+  Network:     { text: "text-emerald-400", border: "border-emerald-500/40", selBg: "bg-emerald-500/10", dot: "bg-emerald-400", stroke: "oklch(0.65 0.18 150)" },
+} satisfies Record<DCLayer, { text: string; border: string; selBg: string; dot: string; stroke: string }>;
+
+const STATUS_LINE = {
+  idle:      { stroke: "oklch(0.556 0 0)", dasharray: "6 4", animated: false },
+  migrating: { stroke: "oklch(0.65 0.22 215)", dasharray: "8 5", animated: true },
+  migrated:  { stroke: "oklch(0.68 0.2 142)", dasharray: "none", animated: false },
 };
+
+// --- Sub-components ---
+
+function LayerDCRow({
+  layer,
+  resources,
+  selected,
+  status,
+  onToggle,
+}: {
+  layer: DCLayer;
+  resources: Resource[];
+  selected: boolean;
+  status: LayerMigrationStatus;
+  onToggle: () => void;
+}) {
+  const Icon = LAYER_ICON[layer];
+  const c = LAYER_COLOR[layer];
+  const locked = status !== "idle";
+
+  return (
+    <button
+      onClick={onToggle}
+      disabled={locked}
+      className={`w-full text-left px-3 py-2.5 rounded-md border transition-all duration-150 flex items-start gap-2.5 group
+        ${locked ? "opacity-40 cursor-not-allowed border-border/10 bg-transparent" :
+          selected
+            ? `${c.selBg} ${c.border} cursor-pointer`
+            : "border-border/10 hover:border-border/30 hover:bg-muted/20 cursor-pointer"
+        }`}
+    >
+      {/* Selection indicator */}
+      <div className={`mt-0.5 w-3.5 h-3.5 shrink-0 rounded-sm border transition-all duration-150 flex items-center justify-center
+        ${locked ? "border-border/30" :
+          selected ? `${c.dot.replace("bg-", "bg-")} border-transparent` : "border-border/50 group-hover:border-border"
+        }`}
+      >
+        {selected && !locked && (
+          <svg viewBox="0 0 10 8" className="w-2 h-2 fill-background">
+            <path d="M1 4l3 3 5-6" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        )}
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5">
+          <Icon className={`h-3.5 w-3.5 shrink-0 ${c.text}`} />
+          <span className={`text-xs font-semibold ${c.text}`}>{layer} Layer</span>
+        </div>
+        <div className="mt-1 flex flex-wrap gap-1">
+          {resources.length === 0 ? (
+            <span className="text-[10px] text-muted-foreground/50 italic">No resources</span>
+          ) : (
+            resources.slice(0, 3).map(r => (
+              <span key={r.id} className="text-[10px] font-mono text-muted-foreground bg-muted/30 rounded px-1 py-0.5 truncate max-w-[90px]">
+                {r.name}
+              </span>
+            ))
+          )}
+          {resources.length > 3 && (
+            <span className="text-[10px] text-muted-foreground">+{resources.length - 3}</span>
+          )}
+        </div>
+      </div>
+    </button>
+  );
+}
+
+function LayerDRRow({ layer, status }: { layer: DCLayer; status: LayerMigrationStatus }) {
+  const Icon = LAYER_ICON[layer];
+  const c = LAYER_COLOR[layer];
+
+  return (
+    <div className="px-3 py-2.5 rounded-md border border-border/10 flex items-center justify-between gap-2">
+      <div className="flex items-center gap-1.5">
+        <Icon className={`h-3.5 w-3.5 shrink-0 ${status === "idle" ? "text-muted-foreground/40" : c.text}`} />
+        <span className={`text-xs font-semibold ${status === "idle" ? "text-muted-foreground/40" : c.text}`}>{layer}</span>
+      </div>
+      {status === "idle" && (
+        <span className="text-[10px] font-mono text-muted-foreground/40">— IDLE</span>
+      )}
+      {status === "migrating" && (
+        <span className={`flex items-center gap-1 text-[10px] font-mono font-semibold text-accent`}>
+          <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+          ACTIVE
+        </span>
+      )}
+      {status === "migrated" && (
+        <span className="flex items-center gap-1 text-[10px] font-mono font-semibold text-green-400">
+          <svg viewBox="0 0 10 8" className="w-2.5 h-2.5"><path d="M1 4l3 3 5-6" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          DONE
+        </span>
+      )}
+    </div>
+  );
+}
+
+function ConnectionLines({ layerStatuses }: { layerStatuses: Record<DCLayer, LayerMigrationStatus> }) {
+  return (
+    <div className="flex flex-col justify-around" style={{ height: "100%" }}>
+      {LAYERS.map((layer) => {
+        const s = STATUS_LINE[layerStatuses[layer]];
+        return (
+          <svg key={layer} width="100%" height="24" preserveAspectRatio="none">
+            <defs>
+              <marker id={`arr-${layer}`} markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L6,3 z" fill={s.stroke} />
+              </marker>
+            </defs>
+            <line
+              x1="0" y1="12" x2="95%" y2="12"
+              stroke={s.stroke}
+              strokeWidth={1.5}
+              strokeDasharray={s.dasharray === "none" ? undefined : s.dasharray}
+              markerEnd={`url(#arr-${layer})`}
+              style={s.animated ? { animation: "flowAnim 1.4s linear infinite" } : undefined}
+            />
+          </svg>
+        );
+      })}
+    </div>
+  );
+}
+
+function CorridorCard({
+  corridor,
+  resources,
+  layerStatuses,
+  onMigrate,
+}: {
+  corridor: MigrationCorridor;
+  resources: Resource[];
+  layerStatuses: Record<DCLayer, LayerMigrationStatus>;
+  onMigrate: (layers: DCLayer[]) => void;
+}) {
+  const [selected, setSelected] = useState<Set<DCLayer>>(new Set());
+
+  function toggle(layer: DCLayer) {
+    setSelected(prev => {
+      const next = new Set(prev);
+      next.has(layer) ? next.delete(layer) : next.add(layer);
+      return next;
+    });
+  }
+
+  function confirm() {
+    if (selected.size === 0) return;
+    onMigrate([...selected]);
+    setSelected(new Set());
+  }
+
+  const layerResources = (layer: DCLayer) =>
+    resources.filter(r => LAYER_TYPES[layer].includes(r.type));
+
+  const selectedCount = selected.size;
+
+  return (
+    <div className="relative bg-card rounded-lg border border-border/20 p-5 flex flex-col gap-4 min-w-[680px] flex-shrink-0">
+      <div className="absolute inset-x-0 top-0 h-px bg-accent/50 rounded-t-lg" />
+
+      {/* Corridor header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Server className="h-3.5 w-3.5 text-accent" />
+          <span className="text-xs font-mono font-bold text-foreground">{corridor.source.datacenter}</span>
+          <span className="text-[10px] text-muted-foreground font-mono">{corridor.source.city.toUpperCase()}</span>
+        </div>
+        <div className="flex items-center gap-1.5 text-[10px] font-mono text-muted-foreground">
+          <span className="border border-accent/30 rounded px-1.5 py-0.5 text-accent font-semibold">
+            {corridor.bandwidth_gbps} Gbps
+          </span>
+          <span>{corridor.latency_ms}ms RTT</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Shield className="h-3.5 w-3.5 text-yellow-400" />
+          <span className="text-xs font-mono font-bold text-foreground">{corridor.target.datacenter}</span>
+          <span className="text-[10px] text-muted-foreground font-mono">{corridor.target.city.toUpperCase()}</span>
+        </div>
+      </div>
+
+      {/* Main grid: DC | lines | DR */}
+      <div className="grid gap-3" style={{ gridTemplateColumns: "1fr 80px 1fr" }}>
+        {/* DC column */}
+        <div className="space-y-1.5">
+          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+            Primary DC — Select layers
+          </p>
+          {LAYERS.map(layer => (
+            <LayerDCRow
+              key={layer}
+              layer={layer}
+              resources={layerResources(layer)}
+              selected={selected.has(layer)}
+              status={layerStatuses[layer]}
+              onToggle={() => toggle(layer)}
+            />
+          ))}
+        </div>
+
+        {/* Connection lines */}
+        <div className="flex items-center pt-8">
+          <ConnectionLines layerStatuses={layerStatuses} />
+        </div>
+
+        {/* DR column */}
+        <div className="space-y-1.5">
+          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+            DR Site — Status
+          </p>
+          {LAYERS.map(layer => (
+            <LayerDRRow key={layer} layer={layer} status={layerStatuses[layer]} />
+          ))}
+        </div>
+      </div>
+
+      {/* Confirm bar */}
+      <div className={`flex items-center justify-between pt-2 border-t border-border/15 transition-opacity duration-200 ${selectedCount > 0 ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
+        <span className="text-[11px] text-muted-foreground">
+          {selectedCount} layer{selectedCount !== 1 ? "s" : ""} selected
+        </span>
+        <button
+          onClick={confirm}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md border border-accent/40 text-accent hover:bg-accent/10 transition-colors"
+        >
+          Migrate {selectedCount > 0 ? `${selectedCount} ` : ""}layer{selectedCount !== 1 ? "s" : ""} →
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// --- Main export ---
 
 export function DataFlowTopology() {
-  const { corridors } = useBCPStore();
-  const activeCount = corridors.filter((c) => c.status === "active").length;
+  const { corridors, resources, layerMigrationState, initiateLayerMigration } = useBCPStore();
+  const activeCount = corridors.filter(c => c.status === "active").length;
 
   return (
     <div>
       <style>{`@keyframes flowAnim{from{stroke-dashoffset:0}to{stroke-dashoffset:-52}}`}</style>
+
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <ArrowLeftRight className="h-3.5 w-3.5 text-muted-foreground" />
@@ -43,66 +286,19 @@ export function DataFlowTopology() {
           {activeCount} ACTIVE
         </span>
       </div>
+
       <div className="flex gap-4 overflow-x-auto pb-2">
-        {corridors.map((corridor) => {
-          const mid = `arrowRight-${corridor.id}`;
-          const color = STROKE[corridor.status];
-          return (
-            <div key={corridor.id} className="relative bg-card rounded-lg border border-border/20 p-6 flex items-center gap-4 min-w-fit flex-shrink-0">
-              <div className="absolute inset-x-0 top-0 h-px bg-accent/50 rounded-t-lg" />
-              {/* Source */}
-              <div className="relative w-28">
-                <div className="absolute -top-2 -right-2 bg-accent text-[10px] font-bold text-background px-1.5 py-0.5 rounded font-mono z-10">P</div>
-                <div className="bg-card border-2 border-accent/60 rounded-lg p-3 flex flex-col items-center gap-1">
-                  <Server className="h-6 w-6 text-accent" />
-                  <span className="text-xs font-bold text-foreground font-mono text-center leading-tight">{corridor.source.datacenter}</span>
-                  <span className="text-[10px] text-muted-foreground font-mono">{corridor.source.city.toUpperCase()}</span>
-                  <div className="flex items-center gap-1 mt-1">
-                    <div className={`w-1.5 h-1.5 rounded-full ${DOT[corridor.status]}`} />
-                    <span className="text-[10px] text-muted-foreground">PRIMARY DC</span>
-                  </div>
-                </div>
-              </div>
-              {/* Path */}
-              <div className="flex flex-col items-center min-w-48 flex-1">
-                <div className="flex justify-center mb-1">
-                  <span className="bg-card border border-accent/30 rounded px-2 py-0.5 text-xs font-mono font-semibold text-accent">
-                    {BW_LABEL[corridor.status](corridor)}
-                  </span>
-                </div>
-                <svg width="100%" height="40" preserveAspectRatio="none">
-                  <defs>
-                    <marker id={mid} markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-                      <path d="M0,0 L0,6 L6,3 z" fill={color} />
-                    </marker>
-                  </defs>
-                  <line x1="0" y1="20" x2="100%" y2="20" stroke={color} strokeWidth={2} strokeDasharray="8 5" markerEnd={`url(#${mid})`}
-                    style={corridor.status === "active" ? { animation: "flowAnim 1.4s linear infinite" } : undefined} />
-                </svg>
-                {corridor.latency_ms > 0 && (
-                  <span className="text-[10px] font-mono text-muted-foreground mt-1">{corridor.latency_ms}ms RTT</span>
-                )}
-              </div>
-              {/* Target */}
-              <div className="relative w-28">
-                <div className="absolute -top-2 -right-2 bg-yellow-500/80 text-[10px] font-bold text-background px-1.5 py-0.5 rounded font-mono z-10">DR</div>
-                <div className="bg-card border-2 border-yellow-500/60 rounded-lg p-3 flex flex-col items-center gap-1">
-                  <Shield className="h-6 w-6 text-yellow-400" />
-                  <span className="text-xs font-bold text-foreground font-mono text-center leading-tight">{corridor.target.datacenter}</span>
-                  <span className="text-[10px] text-muted-foreground font-mono">{corridor.target.city.toUpperCase()}</span>
-                  <div className="flex items-center gap-1 mt-1">
-                    <div className={`w-1.5 h-1.5 rounded-full ${DOT[corridor.status]}`} />
-                    <span className="text-[10px] text-muted-foreground">DR SITE</span>
-                  </div>
-                </div>
-                <div className="w-full bg-muted/40 rounded-full h-1 mt-2">
-                  <div className="bg-accent h-1 rounded-full transition-all duration-500" style={{ width: `${corridor.progress}%` }} />
-                </div>
-                <div className="text-[10px] font-mono text-muted-foreground text-center mt-0.5">{corridor.progress}% synced</div>
-              </div>
-            </div>
-          );
-        })}
+        {corridors.map(corridor => (
+          <CorridorCard
+            key={corridor.id}
+            corridor={corridor}
+            resources={resources}
+            layerStatuses={layerMigrationState[corridor.id] ?? {
+              Web: "idle", Application: "idle", Storage: "idle", Network: "idle"
+            }}
+            onMigrate={layers => initiateLayerMigration(corridor.id, layers)}
+          />
+        ))}
       </div>
     </div>
   );
