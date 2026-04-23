@@ -107,7 +107,7 @@ function LayerDRRow({ layer, status }: { layer: DCLayer; status: LayerMigrationS
   const c = LAYER_COLOR[layer];
 
   return (
-    <div className="px-3 py-2.5 rounded-md border border-border/10 flex items-center justify-between gap-2">
+    <div className="px-3 py-2.5 rounded-md border border-border/10 flex items-center justify-between gap-2 h-full">
       <div className="flex items-center gap-1.5">
         <Icon className={`h-3.5 w-3.5 shrink-0 ${status === "idle" ? "text-muted-foreground/40" : c.text}`} />
         <span className={`text-xs font-semibold ${status === "idle" ? "text-muted-foreground/40" : c.text}`}>{layer}</span>
@@ -131,29 +131,25 @@ function LayerDRRow({ layer, status }: { layer: DCLayer; status: LayerMigrationS
   );
 }
 
-function ConnectionLines({ layerStatuses }: { layerStatuses: Record<DCLayer, LayerMigrationStatus> }) {
+function LayerConnectionLine({ layer, status }: { layer: DCLayer; status: LayerMigrationStatus }) {
+  const s = STATUS_LINE[status];
   return (
-    <div className="flex flex-col justify-around" style={{ height: "100%" }}>
-      {LAYERS.map((layer) => {
-        const s = STATUS_LINE[layerStatuses[layer]];
-        return (
-          <svg key={layer} width="100%" height="24" preserveAspectRatio="none">
-            <defs>
-              <marker id={`arr-${layer}`} markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-                <path d="M0,0 L0,6 L6,3 z" fill={s.stroke} />
-              </marker>
-            </defs>
-            <line
-              x1="0" y1="12" x2="95%" y2="12"
-              stroke={s.stroke}
-              strokeWidth={1.5}
-              strokeDasharray={s.dasharray === "none" ? undefined : s.dasharray}
-              markerEnd={`url(#arr-${layer})`}
-              style={s.animated ? { animation: "flowAnim 1.4s linear infinite" } : undefined}
-            />
-          </svg>
-        );
-      })}
+    <div className="flex items-center w-full h-full">
+      <svg width="100%" height="24" preserveAspectRatio="none">
+        <defs>
+          <marker id={`arr-${layer}`} markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L6,3 z" fill={s.stroke} />
+          </marker>
+        </defs>
+        <line
+          x1="0" y1="12" x2="95%" y2="12"
+          stroke={s.stroke}
+          strokeWidth={1.5}
+          strokeDasharray={s.dasharray === "none" ? undefined : s.dasharray}
+          markerEnd={`url(#arr-${layer})`}
+          style={s.animated ? { animation: "flowAnim 1.4s linear infinite" } : undefined}
+        />
+      </svg>
     </div>
   );
 }
@@ -214,39 +210,32 @@ function CorridorCard({
         </div>
       </div>
 
-      {/* Main grid: DC | lines | DR */}
-      <div className="grid gap-3" style={{ gridTemplateColumns: "1fr 80px 1fr" }}>
-        {/* DC column */}
-        <div className="space-y-1.5">
-          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-            Primary DC — Select layers
-          </p>
-          {LAYERS.map(layer => (
-            <LayerDCRow
-              key={layer}
-              layer={layer}
-              resources={layerResources(layer)}
-              selected={selected.has(layer)}
-              status={layerStatuses[layer]}
-              onToggle={() => toggle(layer)}
-            />
-          ))}
-        </div>
+      {/* Flat grid: each layer row spans all 3 columns so heights align */}
+      <div className="grid gap-x-3 gap-y-1.5" style={{ gridTemplateColumns: "1fr 80px 1fr" }}>
+        {/* Header labels */}
+        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider pb-0.5">
+          Primary DC — Select layers
+        </p>
+        <div />
+        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider pb-0.5">
+          DR Site — Status
+        </p>
 
-        {/* Connection lines */}
-        <div className="flex items-center pt-8">
-          <ConnectionLines layerStatuses={layerStatuses} />
-        </div>
-
-        {/* DR column */}
-        <div className="space-y-1.5">
-          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-            DR Site — Status
-          </p>
-          {LAYERS.map(layer => (
-            <LayerDRRow key={layer} layer={layer} status={layerStatuses[layer]} />
-          ))}
-        </div>
+        {/* One grid row per layer — shared height keeps DC and DR aligned */}
+        {LAYERS.flatMap(layer => [
+          <LayerDCRow
+            key={`dc-${layer}`}
+            layer={layer}
+            resources={layerResources(layer)}
+            selected={selected.has(layer)}
+            status={layerStatuses[layer]}
+            onToggle={() => toggle(layer)}
+          />,
+          <div key={`line-${layer}`} className="flex items-center justify-center">
+            <LayerConnectionLine layer={layer} status={layerStatuses[layer]} />
+          </div>,
+          <LayerDRRow key={`dr-${layer}`} layer={layer} status={layerStatuses[layer]} />,
+        ])}
       </div>
 
       {/* Confirm bar */}
