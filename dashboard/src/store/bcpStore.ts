@@ -5,7 +5,9 @@ import type {
   Resource,
   SystemNode,
   SystemEdge,
-  LogEntry
+  LogEntry,
+  DCLayer,
+  LayerMigrationStatus
 } from "../data/interfaces";
 import {
   mockCorridors,
@@ -40,6 +42,9 @@ interface BCPState {
   setMigrationPhase: (phase: MigrationPhase) => void;
   setSelectedResourceId: (id: string | null) => void;
 
+  layerMigrationState: Record<string, Record<DCLayer, LayerMigrationStatus>>;
+  initiateLayerMigration: (corridorId: string, layers: DCLayer[]) => void;
+
   // Getters (computed values)
   getResourcesByType: (type: Resource["type"]) => Resource[];
   getResourcesByStatus: (status: Resource["status"]) => Resource[];
@@ -60,6 +65,12 @@ export const useBCPStore = create<BCPState>((set, get) => ({
   logEntries: mockLogs,
   selectedResourceId: null,
   activeSection: "overview",
+  layerMigrationState: Object.fromEntries(
+    mockCorridors.map(c => [
+      c.id,
+      { Web: "idle", Application: "idle", Storage: "idle", Network: "idle" } as Record<DCLayer, LayerMigrationStatus>
+    ])
+  ),
 
   setActiveSection: (section) => set({ activeSection: section }),
 
@@ -136,6 +147,24 @@ export const useBCPStore = create<BCPState>((set, get) => ({
 
   setSelectedResourceId: (id) => {
     set({ selectedResourceId: id });
+  },
+
+  initiateLayerMigration: (corridorId, layers) => {
+    set(state => ({
+      layerMigrationState: {
+        ...state.layerMigrationState,
+        [corridorId]: {
+          ...state.layerMigrationState[corridorId],
+          ...Object.fromEntries(layers.map(l => [l, "migrating" as LayerMigrationStatus]))
+        }
+      }
+    }));
+    layers.forEach(layer =>
+      get().addLogEntry({
+        level: "info",
+        message: `${layer} Layer migration initiated for ${corridorId}`
+      })
+    );
   },
 
   // Getters
