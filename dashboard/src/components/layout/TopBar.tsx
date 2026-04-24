@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useBCPStore } from "@/store/bcpStore";
 import { MigrationPhase } from "@/data/interfaces";
-import { Bell, Clock } from "lucide-react";
+import { Bell, Clock, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTheme } from "@/components/theme-provider";
 
 const sectionLabels: Record<string, string> = {
   overview: "Overview",
@@ -25,6 +26,65 @@ function formatSyncLabel(ms: number): string {
   if (minutes < 1) return "just now";
   if (minutes === 1) return "1m ago";
   return `${minutes}m ago`;
+}
+
+function ThemeToggle() {
+  const { theme, setTheme } = useTheme();
+  const isDark =
+    theme === "dark" ||
+    (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+
+  return (
+    <button
+      onClick={() => setTheme(isDark ? "light" : "dark")}
+      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+      className="relative h-7 w-[52px] shrink-0 rounded-full border border-border/40 bg-muted/40 p-0.5 hover:border-border/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+    >
+      {/* Sliding thumb */}
+      <span
+        className={`absolute top-0.5 left-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-accent shadow-sm`}
+        style={{
+          transform: isDark ? "translateX(24px)" : "translateX(0px)",
+          transition: "transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1)",
+        }}
+      >
+        <span
+          style={{
+            display: "flex",
+            transition: "transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 200ms ease",
+            transform: isDark ? "rotate(0deg) scale(1)" : "rotate(90deg) scale(0.9)",
+            opacity: isDark ? 1 : 0,
+            position: "absolute",
+          }}
+        >
+          <Moon className="h-3 w-3 text-accent-foreground" />
+        </span>
+        <span
+          style={{
+            display: "flex",
+            transition: "transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 200ms ease",
+            transform: isDark ? "rotate(-90deg) scale(0.9)" : "rotate(0deg) scale(1)",
+            opacity: isDark ? 0 : 1,
+            position: "absolute",
+          }}
+        >
+          <Sun className="h-3 w-3 text-accent-foreground" />
+        </span>
+      </span>
+
+      {/* Track ghost icons */}
+      <span className="pointer-events-none flex h-full items-center justify-between px-1.5">
+        <Sun
+          className="h-2.5 w-2.5 text-muted-foreground"
+          style={{ opacity: isDark ? 0.45 : 0, transition: "opacity 250ms ease" }}
+        />
+        <Moon
+          className="h-2.5 w-2.5 text-muted-foreground"
+          style={{ opacity: isDark ? 0 : 0.45, transition: "opacity 250ms ease" }}
+        />
+      </span>
+    </button>
+  );
 }
 
 export function TopBar() {
@@ -94,6 +154,7 @@ export function TopBar() {
       </div>
 
       <div className="flex items-center space-x-3">
+        <ThemeToggle />
         <div className="relative">
           <button className="p-2 rounded-md hover:bg-muted/50 transition-colors" aria-label="Notifications">
             <Bell className="h-4 w-4 text-muted-foreground hover:text-accent" />
