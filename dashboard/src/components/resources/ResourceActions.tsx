@@ -42,8 +42,7 @@ export function ResourceActions({ resourceId }: ResourceActionsProps) {
     reset({
       name: resource.name,
       type: resource.type,
-      source_ip: resource.source_ip,
-      target_ip: resource.target_ip,
+      resource_ip: resource.resource_ip,
       hostname: resource.hostname,
       port: resource.port,
       environment: resource.environment,
@@ -121,14 +120,9 @@ export function ResourceActions({ resourceId }: ResourceActionsProps) {
                 />
               </div>
               <div>
-                <label className="mb-1 text-sm font-medium text-muted-foreground block">Source IP</label>
-                <Input {...register("source_ip")} className={errors.source_ip ? "border-destructive" : ""} />
-                {errors.source_ip && <p className="mt-1 text-xs text-destructive">{errors.source_ip.message}</p>}
-              </div>
-              <div>
-                <label className="mb-1 text-sm font-medium text-muted-foreground block">Target IP</label>
-                <Input {...register("target_ip")} className={errors.target_ip ? "border-destructive" : ""} />
-                {errors.target_ip && <p className="mt-1 text-xs text-destructive">{errors.target_ip.message}</p>}
+                <label className="mb-1 text-sm font-medium text-muted-foreground block">Resource IP</label>
+                <Input {...register("resource_ip")} className={errors.resource_ip ? "border-destructive" : ""} />
+                {errors.resource_ip && <p className="mt-1 text-xs text-destructive">{errors.resource_ip.message}</p>}
               </div>
               <div>
                 <label className="mb-1 text-sm font-medium text-muted-foreground block">Hostname</label>

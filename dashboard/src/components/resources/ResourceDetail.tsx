@@ -25,12 +25,8 @@ export function ResourceDetail({ resource, open, onOpenChange }: ResourceDetailP
             <h3 className="font-medium text-lg text-foreground">Configuration</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-muted-foreground">Source IP</span>
-                <p className="font-mono">{resource.source_ip}</p>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Target IP</span>
-                <p className="font-mono">{resource.target_ip}</p>
+                <span className="text-muted-foreground">Resource IP</span>
+                <p className="font-mono">{resource.resource_ip}</p>
               </div>
               <div>
                 <span className="text-muted-foreground">Port</span>

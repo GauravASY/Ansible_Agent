@@ -32,8 +32,7 @@ export function ResourceTable() {
     const matchesSearch =
       resource.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       resource.hostname.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      resource.source_ip.includes(searchTerm) ||
-      resource.target_ip.includes(searchTerm);
+      resource.resource_ip.includes(searchTerm);
     const matchesType = filteredType === "all" || resource.type === filteredType;
     const matchesStatus = filteredStatus === "all" || resource.status === filteredStatus;
     const matchesTier = filteredTier === "all" || resource.priority_tier === filteredTier;
@@ -91,7 +90,7 @@ export function ResourceTable() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border/20 bg-muted/30">
-                {["Name", "Type", "Source IP", "Target IP", "Tier", "Status", "Actions"].map((h) => (
+                {["Name", "Type", "Resource IP", "Tier", "Status", "Actions"].map((h) => (
                   <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     {h}
                   </th>
@@ -101,7 +100,7 @@ export function ResourceTable() {
             <tbody className="divide-y divide-border/10">
               {filteredResources.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-10 text-center text-sm text-muted-foreground">
+                  <td colSpan={6} className="px-4 py-10 text-center text-sm text-muted-foreground">
                     No resources match the current filters.
                   </td>
                 </tr>
@@ -110,8 +109,7 @@ export function ResourceTable() {
                   <tr key={resource.id} className="hover:bg-muted/20 transition-colors">
                     <td className="px-4 py-3 font-medium text-foreground">{resource.name}</td>
                     <td className="px-4 py-3 text-muted-foreground">{resource.type}</td>
-                    <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{resource.source_ip}</td>
-                    <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{resource.target_ip}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{resource.resource_ip}</td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${tierStyles[resource.priority_tier]}`}>
                         {resource.priority_tier}

@@ -22,8 +22,7 @@ export function ResourceForm() {
     defaultValues: {
       name: "",
       type: "Application Server",
-      source_ip: "",
-      target_ip: "",
+      resource_ip: "",
       hostname: "",
       port: 80,
       environment: "Production",
@@ -83,29 +82,15 @@ export function ResourceForm() {
 
         <div>
           <label className="mb-2 text-sm font-medium text-muted-foreground block">
-            Source IP Address
+            Resource IP Address
           </label>
           <Input
-            {...register("source_ip")}
+            {...register("resource_ip")}
             placeholder="192.168.1.10"
-            className={errors.source_ip ? "border-destructive" : ""}
+            className={errors.resource_ip ? "border-destructive" : ""}
           />
-          {errors.source_ip && (
-            <p className="mt-1 text-xs text-destructive">{errors.source_ip.message}</p>
-          )}
-        </div>
-
-        <div>
-          <label className="mb-2 text-sm font-medium text-muted-foreground block">
-            Target IP Address
-          </label>
-          <Input
-            {...register("target_ip")}
-            placeholder="10.10.1.10"
-            className={errors.target_ip ? "border-destructive" : ""}
-          />
-          {errors.target_ip && (
-            <p className="mt-1 text-xs text-destructive">{errors.target_ip.message}</p>
+          {errors.resource_ip && (
+            <p className="mt-1 text-xs text-destructive">{errors.resource_ip.message}</p>
           )}
         </div>
       </div>
