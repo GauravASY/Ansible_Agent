@@ -135,4 +135,11 @@
   html {
     @apply font-sans;
   }
+
+  /* Smooth theme switching — only color properties, lets element-specific transitions override */
+  *, *::before, *::after {
+    transition-property: color, background-color, border-color, fill, stroke;
+    transition-duration: 200ms;
+    transition-timing-function: ease;
+  }
 }
