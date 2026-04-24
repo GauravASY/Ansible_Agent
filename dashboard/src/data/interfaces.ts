@@ -21,8 +21,7 @@ export interface Resource {
   id: string;
   name: string;
   type: "Application Server" | "Database Server" | "Load Balancer" | "Message Broker" | "Storage Volume" | "Network Appliance" | "Microservice";
-  source_ip: string;
-  target_ip: string;
+  resource_ip: string;
   hostname: string;
   port: number;
   environment: "Production" | "Staging" | "DR";
